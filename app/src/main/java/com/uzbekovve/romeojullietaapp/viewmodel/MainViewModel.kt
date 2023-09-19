@@ -55,7 +55,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun onDataChanged() {
-        val sortedMap = wordsMap.sortByDescending(screenState.value.sortBy)
+        val sortedMap = wordsMap.sort(screenState.value.sortBy)
         val records = sortedMap.toList().map { RecordUiModel(it.first, it.second) }
         _screenState.value = screenState.value.copy(records = records, isLoading = false)
     }
@@ -66,16 +66,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         onDataChanged()
     }
 
-    fun HashMap<String, Int>.sortByDescending(sorting: Sorting): Map<String, Int> {
+    private fun HashMap<String, Int>.sort(sorting: Sorting): Map<String, Int> {
         if (sorting == Sorting.BY_OCCURRENCES) {
             return toList().sortedByDescending { (_, value) -> value }.toMap()
         }
         return toSortedMap { p0, p1 ->
             if (sorting == Sorting.BY_LENGTH && p0.length != p1.length) {
-                p1.length.compareTo(p0.length)
+                p0.length.compareTo(p1.length)
             } else {
-                p1.compareTo(
-                    p0,
+                p0.compareTo(
+                    p1,
                 )
             }
         }
