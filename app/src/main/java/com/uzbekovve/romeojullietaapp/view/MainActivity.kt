@@ -19,13 +19,9 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStreamReader
 
 class MainActivity : AppCompatActivity() {
     companion object {
-        private const val FILE_NAME = "Romeo-and-Juliet.txt"
         private const val TAG = "MainActivity"
     }
 
@@ -57,7 +53,6 @@ class MainActivity : AppCompatActivity() {
                 },
             )
         }
-        readFile()
     }
 
     override fun onStart() {
@@ -79,34 +74,6 @@ class MainActivity : AppCompatActivity() {
                 adapter.submitList(state.records)
             }
         }
-    }
-
-    private fun readFile() {
-        dataScope.launch {
-            var reader: BufferedReader? = null
-            try {
-                reader = BufferedReader(
-                    InputStreamReader(assets.open(FILE_NAME), "UTF-8"),
-                )
-
-                while (true) {
-                    val line = reader.readLine()
-                    if (line.isNullOrEmpty()) {
-                        viewModel.onTextProcessingEnded()
-                        return@launch
-                    }
-                    viewModel.processLine(line)
-                }
-            } catch (e: IOException) {
-                Log.e(TAG, e.message.orEmpty())
-            } finally {
-                try {
-                    reader?.close()
-                } catch (e: IOException) {
-                    Log.e(TAG, e.message.orEmpty())
-                }
-            }
-        }.start()
     }
 
     override fun onStop() {

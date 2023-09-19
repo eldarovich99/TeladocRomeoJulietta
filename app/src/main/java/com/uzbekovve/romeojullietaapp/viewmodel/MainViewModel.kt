@@ -1,15 +1,22 @@
 package com.uzbekovve.romeojullietaapp.viewmodel
 
+import android.app.Application
 import android.util.Log
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.uzbekovve.romeojullietaapp.data.AppRepository
 import com.uzbekovve.romeojullietaapp.model.RecordUiModel
 import com.uzbekovve.romeojullietaapp.model.Sorting
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import java.util.SortedMap
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 
-class MainViewModel : ViewModel() {
+class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _screenState = MutableStateFlow(
         MainViewModelState(
             listOf(),
@@ -21,17 +28,28 @@ class MainViewModel : ViewModel() {
 
     private val wordsMap = HashMap<String, Int>()
     private val alphabeticRegex = Regex("[^A-Za-z0-9 ]")
+    private val appRepository = AppRepository(application)
 
-    fun processLine(text: String) {
+    init {
+        viewModelScope.launch {
+            appRepository.loadData().onEach {
+                processLine(it)
+            }.onCompletion {
+                onTextProcessingEnded()
+            }.collect()
+        }
+    }
+
+    private fun processLine(text: String) {
         val words = text.split(" ").map {
-            alphabeticRegex.replace(it.lowercase(), "") // works
+            alphabeticRegex.replace(it.lowercase(), "")
         }
         words.forEach { word ->
             wordsMap[word] = wordsMap.getOrDefault(word, 0).inc()
         }
     }
 
-    fun onTextProcessingEnded() {
+    private fun onTextProcessingEnded() {
         Log.d("MainActivity", "onTextProcessingEnded")
         onDataChanged()
     }
